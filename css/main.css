@@ -1,0 +1,57 @@
+.header {
+	text-align: center;
+}
+
+.header h1 {
+	font-size: 3em;
+}
+
+.main-button {
+	padding: 12px 30px;
+	background-color: #1976d2;
+	color: #ffffff;
+	font-size: 16px;
+	border: none;
+	border-radius: 6px;
+	box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+}
+
+.main-button:hover {
+	background-color: #004ba0;
+}
+
+#identicon-container {
+	text-align: center;
+}
+
+#icon-image {
+	display: inline-block;
+	width: 400px;
+	height: 400px;
+}
+
+.icon-form {
+	text-align: center;
+}
+
+#icon-input {
+	display: inline-block;
+	padding: 12px 10px;
+	border: none;
+	border-radius: 6px;
+	background-color: #e1e2e3;
+}
+
+@media screen and (max-width: 700px){
+	#icon-image {
+		width: 300px;
+		height: 300px;
+	}
+}
+
+@media screen and (max-width: 350px){
+	#icon-image {
+		width: 200px;
+		height: 200px;
+	}
+}

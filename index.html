@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Identicon Generator</title>
+	
+	<link rel="stylesheet" type="text/css" href="/css/main.css">
+	<link rel="icon" href="/images/favicon.ico" type="image/x-icon" />
+	<link rel="manifest" href="/manifest.json">
+	
+	<!-- iOS meta tags and icons -->
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="apple-mobile-web-app-status-bar-style" content="black">
+	<meta name="apple-mobile-web-app-title" content="Identicon Generator">
+	<link rel="apple-touch-icon" href="/images/icons/icon-152x152.png">
+	
+	<meta name="description" content="An identicon generator PWA.">
+	<meta name="theme-color" content="#1976d2" />
+	
+	<script type="text/javascript" src="/js/jdenticon-2.2.0.min.js"></script>
+</head>
+<body>
+    <header class="header">
+		<h1>Identicon Generator</h1>
+		<p>A Progressive Web App that uses <a href="https://jdenticon.com/" target="_blank">Jdenticon</a> to generate identicons.</p>
+		<button id="install-button" class="main-button" aria-label="Install" hidden>Install</button>
+	</header>
+	
+	<main>
+		<div id="identicon-container">
+			<svg id="icon-image" data-jdenticon-value="icon value"></svg>
+		</div>
+		<div class="icon-form">
+			<input id="icon-input" type="text" placeholder="Write here..." spellcheck="false" maxlength="20">
+			<p>Write some text above to generate an identicon.</p>
+		</div>
+	</main>
+	
+	<script src="/js/app.js"></script>
+	<script src="/js/install.js"></script>
+</body>
+</html>
