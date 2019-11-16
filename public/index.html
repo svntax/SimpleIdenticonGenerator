@@ -20,6 +20,7 @@
 	<meta name="theme-color" content="#1976d2" />
 	
 	<script type="text/javascript" src="/js/jdenticon-2.2.0.min.js"></script>
+	<script src="https://cdn.auth0.com/js/auth0-spa-js/1.2/auth0-spa-js.production.js"></script>
 </head>
 <body>
     <header class="header">
@@ -35,6 +36,11 @@
 		<div class="icon-form">
 			<input id="icon-input" type="text" placeholder="Write here..." spellcheck="false" maxlength="20">
 			<p>Write some text above to generate an identicon.</p>
+			<button id="btn-login" class="main-button hidden" aria-label="Login" disabled="true">Login</button>
+			<button id="btn-logout" class="secondary-button hidden" aria-label="Logout" disabled="true">Logout</button>
+		</div>
+		<div id="gated-content" class="hidden">
+			<pre id="ipt-user-profile"></pre>
 		</div>
 	</main>
 	

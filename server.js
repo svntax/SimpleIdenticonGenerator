@@ -1,0 +1,16 @@
+"use strict";
+
+const express = require("express");
+const { join } = require("path");
+const app = express();
+
+// Serve static assets
+app.use(express.static(join(__dirname, "public")));
+
+// Endpoint to serve the configuration file
+app.get("/auth_config.json", (req, res) => {
+	res.sendFile(join(__dirname, "auth_config.json"));
+});
+
+// Listen on port 3000
+app.listen(3000, () => console.log("Application running on port 3000"));
