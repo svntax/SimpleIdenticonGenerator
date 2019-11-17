@@ -32,7 +32,8 @@ const configureClient = async () => {
 	
 	auth0 = await createAuth0Client({
 		domain: config.domain,
-		client_id: config.clientId
+		client_id: config.clientId,
+		audience: config.audience
 	});
 	
 	/*fetch("/auth_config.json").then((response) => {
@@ -71,6 +72,8 @@ const updateUI = async () => {
 	
 	const isAuthenticated = await auth0.isAuthenticated();
 	
+	document.getElementById("btn-call-api").disabled = !isAuthenticated;
+	
 	if(isAuthenticated){
 		logoutBtn.disabled = false;
 		logoutBtn.classList.remove("hidden");
@@ -100,6 +103,27 @@ const updateUI = async () => {
 	});
 	*/
 };
+
+const callApi = async () => {
+	try{
+		const token = await auth0.getTokenSilently();
+		const response = await fetch("/api/external", {
+			headers: {
+				Authorization: `Bearer ${token}`
+			}
+		});
+		
+		const responseData = await response.json();
+		
+		const responseElement = document.getElementById("api-call-result");
+		responseElement.innerText = JSON.stringify(responseData, {}, 2);
+	}
+	catch(err){
+		console.error(err);
+	}
+};
+
+document.getElementById("btn-call-api").onclick = callApi;
 
 const login = async () => {
 	await auth0.loginWithRedirect({
