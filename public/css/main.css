@@ -1,9 +1,29 @@
+body {
+	margin: 0;
+	font-family: Helvetica, sans-serif;
+}
+
 .header {
 	text-align: center;
 }
 
-.header h1 {
-	font-size: 3em;
+.top-menu {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 16px 24px;
+	background-color: rgba(0, 0, 0, 0.8);
+}
+
+.app-name {
+	font-size: 32px;
+	color: #ffffff;
+}
+
+.app-description {
+	font-size: 20px;
+	display: block;
+	margin: 16px;
 }
 
 .main-button {
@@ -24,7 +44,7 @@
 .secondary-button {
 	min-width: 120px;
 	padding: 12px 30px;
-	background-color: #ffffff;
+	background-color: #ffffff00;
 	color: #1976d2;
 	font-size: 16px;
 	border: 2px solid transparent;
@@ -33,6 +53,22 @@
 
 .secondary-button:hover {
 	border: 2px solid #1976d2;
+}
+
+.tertiary-button {
+	min-width: 120px;
+	padding: 12px 30px;
+	background-color: #ffffff00;
+	color: #ffffff;
+	font-size: 16px;
+	font-weight: bold;
+	border: 2px solid #ffffff;
+	border-radius: 6px;
+}
+
+.tertiary-button:hover {
+	background-color: #ffffff;
+	color: rgba(0, 0, 0, 0.8);
 }
 
 #identicon-container {
@@ -71,6 +107,10 @@ label {
 	display: block;
 }
 
+.app-content {
+	text-align: center;
+}
+
 @media screen and (max-width: 700px){
 	#icon-image {
 		width: 300px;
@@ -78,9 +118,25 @@ label {
 	}
 }
 
+@media screen and (max-width: 475px){
+	.top-menu {
+		flex-direction: column;
+		flex-wrap: wrap;
+		justify-content: center;
+	}
+	
+	.app-name {
+		margin: 16px;
+	}
+}
+
 @media screen and (max-width: 350px){
 	#icon-image {
 		width: 200px;
 		height: 200px;
+	}
+	
+	.app-name {
+		display: block;
 	}
 }

@@ -1,5 +1,7 @@
 "use strict";
 
+let currentIconValue = "icon value";
+
 function initServiceWorker(){
 	if("serviceWorker" in navigator){
 		window.addEventListener("load", () => {
@@ -17,6 +19,7 @@ initServiceWorker();
 const iconInput = document.getElementById("icon-input");
 const iconImage = document.getElementById("icon-image");
 iconInput.addEventListener("change", (evt) => {
+	currentIconValue = evt.target.value;
 	jdenticon.update(iconImage, evt.target.value);
 });
 
@@ -104,6 +107,17 @@ const updateUI = async () => {
 	*/
 };
 
+const updateIdenticonList = (jsonList) => {
+	const identiconsList = document.querySelector(".identicons-list");
+	
+	for(let i = 0; i < jsonList.iconList.length; i++){
+		const value = jsonList.iconList[i];
+		let entry = document.createElement("li");
+		entry.appendChild(document.createTextNode(value));
+		identiconsList.appendChild(entry);
+	}
+};
+
 const callApi = async () => {
 	try{
 		const token = await auth0.getTokenSilently();
@@ -122,8 +136,40 @@ const callApi = async () => {
 		console.error(err);
 	}
 };
-
 document.getElementById("btn-call-api").onclick = callApi;
+
+const saveIdenticon = async () => {
+	const iconData = currentIconValue;
+	console.log("Saving " + iconData + " to favorites...");
+	
+	try{
+		const token = await auth0.getTokenSilently();
+		const response = await fetch("/api/identicon", {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+				Authorization: `Bearer ${token}`
+			},
+			body: JSON.stringify({
+				iconValue: iconData
+			})
+		});
+		const responseData = await response.json();
+		
+		console.log("Identicon saved: ", responseData);
+		updateIdenticonList(responseData);
+	}
+	catch(err){
+		if(err.error === "login_required"){
+			//TODO: offline saving or redirect to login page
+			console.log("Could not save identicon: Login required");
+		}
+		else{
+			console.log("Could not save identicon.", err);
+		}
+	}
+};
+document.getElementById("btn-save-identicon").onclick = saveIdenticon;
 
 const login = async () => {
 	await auth0.loginWithRedirect({
@@ -144,6 +190,8 @@ const logoutButton = document.getElementById("btn-logout");
 logoutButton.onclick = logout;
 
 window.onload = async () => {
+	jdenticon.update(iconImage, "icon value");
+	
 	await configureClient();
 	
 	updateUI();

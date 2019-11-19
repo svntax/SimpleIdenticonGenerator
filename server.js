@@ -13,6 +13,8 @@ if(!authConfig.domain || !authConfig.audience){
 	throw "Please make sure that auth_config.json is in place and populated.";
 }
 
+app.use(express.json()); //Used to parse JSON bodies
+
 // Serve static assets
 app.use(express.static(join(__dirname, "public")));
 
@@ -34,6 +36,16 @@ const checkScopes = jwtAuthz([ "read:messages" ], {customScopeKey: "permissions"
 app.get("/api/external", checkJwt, checkScopes, (req, res) => {
 	res.send({
 		msg: "Your access token was successfully validated!"
+	});
+});
+
+app.post("/api/identicon", checkJwt, (req, res) => {
+	console.log("Received:", req.body);
+	//TODO: save to database
+	res.json({
+		iconList: [
+			req.body.iconValue
+		]
 	});
 });
 
