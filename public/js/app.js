@@ -84,6 +84,7 @@ const updateUI = async () => {
 		loginBtn.disabled = true;
 		loginBtn.classList.add("hidden");
 		
+		//TODO: debug test, remove later
 		document.getElementById("gated-content").classList.remove("hidden");
 		document.getElementById("ipt-user-profile").innerHTML = JSON.stringify(
 			await auth0.getUser()
@@ -96,6 +97,7 @@ const updateUI = async () => {
 		loginBtn.disabled = false;
 		loginBtn.classList.remove("hidden");
 		
+		//TODO: debug test, remove later
 		document.getElementById("gated-content").classList.add("hidden");
 	}
 	
@@ -107,8 +109,30 @@ const updateUI = async () => {
 	*/
 };
 
+const fetchUserData = async () => {
+	try{
+		const token = await auth0.getTokenSilently();
+		
+		const response = await fetch("/api/identicon", {
+			headers: {
+				Authorization: `Bearer ${token}`
+			}
+		});
+		
+		const responseData = await response.json();
+		console.log("Got user data.", responseData);
+		updateIdenticonList(responseData);
+	}
+	catch(err){
+		console.error(err);
+	}
+}
+
 const updateIdenticonList = (jsonList) => {
 	const identiconsList = document.querySelector(".identicons-list");
+	while(identiconsList.firstChild){
+		identiconsList.removeChild(identiconsList.firstChild);
+	}
 	
 	for(let i = 0; i < jsonList.iconList.length; i++){
 		const value = jsonList.iconList[i];
@@ -121,6 +145,7 @@ const updateIdenticonList = (jsonList) => {
 const callApi = async () => {
 	try{
 		const token = await auth0.getTokenSilently();
+		
 		const response = await fetch("/api/external", {
 			headers: {
 				Authorization: `Bearer ${token}`
@@ -201,6 +226,8 @@ window.onload = async () => {
 	if(isAuthenticated){
 		window.history.replaceState({}, document.title, window.location.pathname);
 		updateUI();
+		console.log("Fetching user data...");
+		fetchUserData();
 		return;
 	}
 	
@@ -208,6 +235,8 @@ window.onload = async () => {
 	if(query.includes("code=") && query.includes("state=")){
 		await auth0.handleRedirectCallback();
 		updateUI();
+		console.log("Fetching user data...");
+		fetchUserData();
 		window.history.replaceState({}, document.title, "/");
 	}
 };
