@@ -49,11 +49,11 @@ Create a json file `db_config.json` and add the values of your MySQL server. For
 
 ```
 {
-	"host": "localhost",
-	"database": "database",
-	"user": "username",
-	"password": "password",
-	"port": 3306
+    "host": "localhost",
+    "database": "database",
+    "user": "username",
+    "password": "password",
+    "port": 3306
 }
 ```
 
@@ -61,9 +61,9 @@ The MySQL database can be set up with the following:
 
 ```
 CREATE TABLE users (
-	id INT NOT NULL AUTO_INCREMENT,
-	user_id VARCHAR(80) NOT NULL,
-	icons_list JSON,
-	PRIMARY KEY(id)
+    id INT NOT NULL AUTO_INCREMENT,
+    user_id VARCHAR(80) NOT NULL,
+    icons_list JSON,
+    PRIMARY KEY(id)
 );
 ```
