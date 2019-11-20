@@ -1,4 +1,4 @@
-# SimpleIdenticonGenerator
+# Simple Identicon Generator
 
 A progressive web app that generates identicons using [Jdenticon](https://jdenticon.com/). Users can sign up/log in with to save and keep track of their favorite identicons.
 
