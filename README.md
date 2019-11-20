@@ -45,6 +45,8 @@ TODO
 
 ### MySQL Setup
 
+This project uses MySQL 8.0.18 as of this writing.
+
 Create a json file `db_config.json` and add the values of your MySQL server. For this project, a local server was set up using [MySQL Community Server](https://dev.mysql.com/downloads/mysql/).
 
 ```
