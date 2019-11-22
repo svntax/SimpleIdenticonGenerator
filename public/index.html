@@ -23,6 +23,14 @@
 	<script src="https://cdn.auth0.com/js/auth0-spa-js/1.2/auth0-spa-js.production.js"></script>
 </head>
 <body>
+	<template>
+		<div class="identicons-list-entry">
+			<svg class="icon-small" data-jdenticon-value="value" viewBox="0 0 50 50" preserveAspectRatio="xMidYMid meet"></svg>
+			<span class="identicons-list-text">value that's very long here</span>
+			<button class="btn-remove-icon secondary-button" aria-label="Remove icon from favorites">Remove</button>
+		</div>
+	</template>
+
     <header class="header">
 		<section class="top-menu">
 			<span class="app-name">Identicon Generator</span>
@@ -48,9 +56,10 @@
 				<pre id="ipt-user-profile"></pre>
 			</div>
 			<button id="btn-save-identicon" class="main-button">Save identicon</button>
-			<ul class="identicons-list">
+			<span class="app-description">Favorite Identicons</span>
+			<div class="identicons-list">
 				
-			</ul>
+			</div>
 		</section>
 		<button id="btn-call-api" disabled="true">Call Api</button>
 		<pre id="api-call-result"></pre>

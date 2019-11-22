@@ -128,6 +128,22 @@ const fetchUserData = async () => {
 	}
 }
 
+const removeIdenticon = async () => {
+	// TODO
+	console.log("Removing identicon");
+};
+
+const createIconEntry = (iconValue) => {
+	const temp = document.getElementsByTagName("template")[0];
+	
+	let newNode = temp.content.cloneNode(true);
+	newNode.querySelector(".identicons-list-text").textContent = iconValue;
+	jdenticon.update(newNode.querySelector(".icon-small"), iconValue);
+	newNode.querySelector(".btn-remove-icon").onclick = removeIdenticon;
+	
+	return newNode;
+};
+
 const updateIdenticonList = (jsonList) => {
 	const identiconsList = document.querySelector(".identicons-list");
 	while(identiconsList.firstChild){
@@ -136,8 +152,7 @@ const updateIdenticonList = (jsonList) => {
 	
 	for(let i = 0; i < jsonList.iconList.length; i++){
 		const value = jsonList.iconList[i];
-		let entry = document.createElement("li");
-		entry.appendChild(document.createTextNode(value));
+		let entry = createIconEntry(value);
 		identiconsList.appendChild(entry);
 	}
 };

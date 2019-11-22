@@ -26,6 +26,10 @@ body {
 	margin: 16px;
 }
 
+button:focus {
+	outline: 0;
+}
+
 .main-button {
 	min-width: 120px;
 	padding: 12px 30px;
@@ -43,16 +47,16 @@ body {
 
 .secondary-button {
 	min-width: 120px;
-	padding: 12px 30px;
-	background-color: #ffffff00;
-	color: #1976d2;
+	padding: 8px 16px;
+	background-color: #dc004d;
+	color: #ffffff;
 	font-size: 16px;
 	border: 2px solid transparent;
 	border-radius: 6px;
 }
 
 .secondary-button:hover {
-	border: 2px solid #1976d2;
+	background-color: #9c1343;
 }
 
 .tertiary-button {
@@ -79,6 +83,42 @@ body {
 	display: inline-block;
 	width: 400px;
 	height: 400px;
+}
+
+.icon-small {
+	width: 120px;
+	height: 120px;
+	display: inline-block;
+	padding: 20px;
+	border-radius: 50%;
+	background-image: radial-gradient(#545454, #ffffff2e);
+}
+
+.identicons-list {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: space-evenly;
+	padding-left: 32px;
+	padding-right: 32px;
+	margin-top: 24px;
+	margin-bottom: 24px;
+}
+
+.identicons-list-entry {
+	margin: 8px;
+	text-align: center;
+}
+
+.identicons-list-text {
+	display: block;
+	margin-top: 4px;
+	margin-bottom: 8px;
+	color: #112a50e3;
+	font-weight: bold;
+}
+
+.btn-remove-icon {
+	min-width: 0;
 }
 
 .icon-form {
