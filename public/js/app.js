@@ -38,35 +38,6 @@ const configureClient = async () => {
 		client_id: config.clientId,
 		audience: config.audience
 	});
-	
-	/*fetch("/auth_config.json").then((response) => {
-		return response.json();
-	}).then((config) => {
-		return createAuth0Client({
-			domain: config.domain,
-			client_id: config.clientId
-		});
-	}).then((authResponse) => {
-		auth0 = authResponse;
-		
-		updateUI();
-		
-		auth0.isAuthenticated().then((isAuthenticated) => {
-			if(isAuthenticated){
-				// show gated content
-			}
-			else{
-				const query = window.location.search;
-				if(query.includes("code=") && query.includes("state=")){
-					auth0.handleRedirectCallback().then(() => {
-						updateUI();
-						
-						window.history.replaceState({}, document.title, "/");
-					});
-				}
-			}
-		});
-	});*/
 };
 
 const updateUI = async () => {
@@ -128,9 +99,33 @@ const fetchUserData = async () => {
 	}
 }
 
-const removeIdenticon = async () => {
-	// TODO
-	console.log("Removing identicon");
+const removeIdenticon = async (evt) => {
+	const iconData = evt.srcElement.parentNode.querySelector(".identicons-list-text").innerText;
+	console.log("Removing identicon: " + iconData);	
+	try{
+		const token = await auth0.getTokenSilently();
+		const response = await fetch("/api/identicon", {
+			method: "DELETE",
+			headers: {
+				"Content-Type": "application/json",
+				Authorization: `Bearer ${token}`
+			},
+			body: JSON.stringify({
+				iconValue: iconData
+			})
+		});
+		const responseData = await response.json();
+		updateIdenticonList(responseData);
+	}
+	catch(err){
+		if(err.error === "login_required"){
+			//TODO: offline removing
+			console.log("Could not save identicon: Login required");
+		}
+		else{
+			console.log("Could not remove identicon.", err);
+		}
+	}
 };
 
 const createIconEntry = (iconValue) => {

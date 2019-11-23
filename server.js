@@ -150,13 +150,40 @@ app.post("/api/identicon", checkJwt, (req, res) => {
 		else{
 			console.log("Could not find user: " + userId);
 		}
-	});	
+	});
 });
 
 app.delete("/api/identicon", checkJwt, (req, res) => {
 	const userId = req.user.sub;
-	//TODO: delete given icon value from user's icons list
-	console.log("DELETE request from user " + userId);
+	console.log("DELETE request from user " + userId + " for " + req.body.iconValue);
+	connection.query(`SELECT icons_list FROM users WHERE user_id = '${userId}'`, (err, result, fields) => {
+		if (err) throw err;
+		if(result.length > 0){
+			const jsonEntry = JSON.parse(JSON.stringify(result))[0].icons_list;
+			if(jsonEntry){
+				// Update the json data
+				const jsonObject = JSON.parse(jsonEntry);
+				const iconIndex = jsonObject.iconList.indexOf(req.body.iconValue);
+				if(iconIndex >= 0){
+					// Update the json data only if it's a new value
+					jsonObject.iconList.splice(iconIndex, 1);
+					const newJsonData = JSON.stringify(jsonObject);
+					updateUserData(userId, newJsonData);
+					//Send updated json back to user
+					res.json(jsonObject);
+				}
+				else{
+					console.log("Icon value " + req.body.iconValue + " does not exist.");
+				}
+			}
+			else{
+				console.log("Could not find user's icons list: " + userId);
+			}
+		}
+		else{
+			console.log("Could not find user: " + userId);
+		}
+	});
 });
 
 // Endpoint to serve the auth config file
