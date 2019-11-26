@@ -165,6 +165,16 @@ const saveIdenticon = async () => {
 	const iconData = currentIconValue;
 	console.log("Saving " + iconData + " to favorites...");
 	
+	// Client-side check: is the identicon already saved
+	const identiconsList = document.querySelector(".identicons-list").children;
+	for(let i = 0; i < identiconsList.length; i++){
+		const entry = identiconsList[i];
+		if(entry.querySelector(".identicons-list-text").textContent === iconData){
+			console.log("This identicon is already saved!");
+			return;
+		}
+	}
+	
 	try{
 		const token = await auth0.getTokenSilently();
 		const response = await fetch("/api/identicon", {
@@ -181,6 +191,10 @@ const saveIdenticon = async () => {
 			const responseData = await response.json();
 			console.log("Identicon saved: ", responseData);
 			updateIdenticonList(responseData);
+		}
+		else{
+			const responseData = await response.json();
+			console.log(responseData.msg);
 		}
 	}
 	catch(err){

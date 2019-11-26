@@ -130,7 +130,9 @@ app.post("/api/identicon", checkJwt, (req, res) => {
 					res.json(jsonObject);
 				}
 				else{
-					console.log("Icon value " + req.body.iconValue + " is already saved.");
+					res.status(400).send({
+						msg: "400 Bad Request: Icon value <" + req.body.iconValue + "> is already saved."
+					});
 				}
 			}
 			else{
