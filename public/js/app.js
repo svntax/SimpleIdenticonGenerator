@@ -103,6 +103,10 @@ const removeIdenticon = async (evt) => {
 			const responseData = await response.json();
 			updateIdenticonList(responseData);
 		}
+		else{
+			const responseData = await response.json();
+			console.log(responseData.msg);
+		}
 	}
 	catch(err){
 		if(err.error === "login_required"){

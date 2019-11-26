@@ -131,7 +131,7 @@ app.post("/api/identicon", checkJwt, (req, res) => {
 				}
 				else{
 					res.status(400).send({
-						msg: "400 Bad Request: Icon value <" + req.body.iconValue + "> is already saved."
+						msg: "400 Bad Request: Identicon <" + req.body.iconValue + "> is already saved."
 					});
 				}
 			}
@@ -175,15 +175,21 @@ app.delete("/api/identicon", checkJwt, (req, res) => {
 					res.json(jsonObject);
 				}
 				else{
-					console.log("Icon value " + req.body.iconValue + " does not exist.");
+					res.status(400).send({
+						msg: "400 Bad Request: Identicon <" + req.body.iconValue + "> does not exist in user's saved list."
+					});
 				}
 			}
 			else{
-				console.log("Could not find user's icons list: " + userId);
+				res.status(500).send({
+					msg: "500 Server Error: Could not find user's identicons list."
+				});
 			}
 		}
 		else{
-			console.log("Could not find user: " + userId);
+			res.status(400).send({
+				msg: "400 Bad Request: User does not exist."
+			});
 		}
 	});
 });
