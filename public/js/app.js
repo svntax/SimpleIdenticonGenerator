@@ -54,12 +54,6 @@ const updateUI = async () => {
 		
 		loginBtn.disabled = true;
 		loginBtn.classList.add("hidden");
-		
-		//TODO: debug test, remove later
-		document.getElementById("gated-content").classList.remove("hidden");
-		document.getElementById("ipt-user-profile").innerHTML = JSON.stringify(
-			await auth0.getUser()
-		);
 	}
 	else{
 		logoutBtn.disabled = true;
@@ -67,17 +61,7 @@ const updateUI = async () => {
 		
 		loginBtn.disabled = false;
 		loginBtn.classList.remove("hidden");
-		
-		//TODO: debug test, remove later
-		document.getElementById("gated-content").classList.add("hidden");
 	}
-	
-	/*
-	auth0.isAuthenticated().then((isAuthenticated) => {
-		document.getElementById("btn-logout").disabled = !isAuthenticated;
-		document.getElementById("btn-login").disabled = isAuthenticated;
-	});
-	*/
 };
 
 const fetchUserData = async () => {
@@ -89,10 +73,11 @@ const fetchUserData = async () => {
 				Authorization: `Bearer ${token}`
 			}
 		});
-		
-		const responseData = await response.json();
-		console.log("Got user data.", responseData);
-		updateIdenticonList(responseData);
+		if(response.status === 200){
+			const responseData = await response.json();
+			console.log("Got user data.", responseData);
+			updateIdenticonList(responseData);
+		}
 	}
 	catch(err){
 		console.error(err);
@@ -114,8 +99,10 @@ const removeIdenticon = async (evt) => {
 				iconValue: iconData
 			})
 		});
-		const responseData = await response.json();
-		updateIdenticonList(responseData);
+		if(response.status === 200){
+			const responseData = await response.json();
+			updateIdenticonList(responseData);
+		}
 	}
 	catch(err){
 		if(err.error === "login_required"){
@@ -161,11 +148,12 @@ const callApi = async () => {
 				Authorization: `Bearer ${token}`
 			}
 		});
-		
-		const responseData = await response.json();
-		
-		const responseElement = document.getElementById("api-call-result");
-		responseElement.innerText = JSON.stringify(responseData, {}, 2);
+		if(response.status === 200){
+			const responseData = await response.json();
+			
+			const responseElement = document.getElementById("api-call-result");
+			responseElement.innerText = JSON.stringify(responseData, {}, 2);
+		}
 	}
 	catch(err){
 		console.error(err);
@@ -189,10 +177,11 @@ const saveIdenticon = async () => {
 				iconValue: iconData
 			})
 		});
-		const responseData = await response.json();
-		
-		console.log("Identicon saved: ", responseData);
-		updateIdenticonList(responseData);
+		if(response.status === 200){
+			const responseData = await response.json();
+			console.log("Identicon saved: ", responseData);
+			updateIdenticonList(responseData);
+		}
 	}
 	catch(err){
 		if(err.error === "login_required"){
