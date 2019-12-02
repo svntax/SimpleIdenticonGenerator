@@ -126,8 +126,8 @@ app.post("/api/identicon", checkJwt, (req, res) => {
 					jsonObject.iconList.push(req.body.iconValue);
 					const newJsonData = JSON.stringify(jsonObject);
 					updateUserData(userId, newJsonData);
-					//Send updated json back to user
-					res.json(jsonObject);
+					//Send confirmation
+					res.status(201).send("Identicon successfully added.");
 				}
 				else{
 					res.status(400).send({

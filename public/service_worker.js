@@ -1,12 +1,18 @@
 "use strict";
 
-const CACHE_NAME = "static-cache-v1";
+const CACHE_NAME = "static-cache-v2";
+const DB_NAME = "small-db";
+
+let db; // Database reference
 
 const FILES_TO_CACHE = [
+	"/",
 	"/index.html",
 	"/css/main.css",
 	"/js/app.js",
-	"/js/install.js"
+	"/js/install.js",
+	"/js/jdenticon-2.2.0.min.js",
+	"/images/favicon.ico",
 ];
 
 self.addEventListener("install", (evt) => {
@@ -32,10 +38,24 @@ self.addEventListener("activate", (evt) => {
 		})
 	);
 	
+	//Create indexedDB database
+	const request = indexedDB.open(DB_NAME, 1);
+	request.onerror = (errorEvent) => {
+		console.log("Error creating local database.");
+	};
+	request.onsuccess = (successEvent) => {
+		db = successEvent.target.result;
+	};
+	request.onupgradeneeded = (upgradeEvent) => {
+		const dbRef = upgradeEvent.target.result;
+		const objectStore = dbRef.createObjectStore("iconList", { autoIncrement: true });
+		//objectStore variable is unused, but we still needed to create the object store anyway
+	};
+	
 	self.clients.claim();
 });
 
-self.addEventListener("fetch", (evt) => {
+self.addEventListener("fetch", async (evt) => {
 	/*
 	evt.respondWith( //Cache first
 		caches.open(CACHE_NAME).then((cache) => {
@@ -45,14 +65,77 @@ self.addEventListener("fetch", (evt) => {
 		})
 	);
 	*/
+	const req = evt.request;
+	const url = new URL(req.url);
+	const urlPath = url.pathname;
 	
-	evt.respondWith( //Network request first
-		fetch(evt.request)
-		.catch(() => {
-			console.log("[ServiceWorker] Failed network request, serving cached files.");
-			return caches.open(CACHE_NAME).then((cache) => {
-				return cache.match(evt.request);
+	if(/^\/api\/.+$/.test(urlPath)){ // Handle API requests
+		if(req.method === "GET"){
+			// Stale-while-revalidate strategy for GET request
+			evt.respondWith(
+				caches.open(CACHE_NAME).then((cache) => {
+					return cache.match(req).then((response) => {
+						console.log("GET cache", response);
+						const fetchPromise = fetch(req).then((networkResponse) => {
+							cache.add(req, networkResponse.clone()); //TODO: is the access token being saved here? You should probably make the key the URL or something, NOT the request itself
+							return networkResponse;
+						});
+						
+						return response || fetchPromise;
+					});
+				})
+			);
+		}
+		else if(req.method === "POST"){
+			// Save new identicon to indexedDB
+			req.json().then((jsonData) => {
+				const iconValue = jsonData.iconValue;
+				console.log("[ServiceWorker] Saving <" + iconValue + "> to indexedDB...");
+				
+				const objectStore = db.transaction("iconList", "readwrite").objectStore("iconList");
+				let dbRequest = objectStore.add(iconValue);
+				dbRequest.oncomplete = (completeEvent) => {
+					// TODO: https://github.com/jakearchibald/idb
+					// FOR SOME REASON oncomplete and onerror do NOT run for these indexedDB requests. The reason is probably b/c indexedDB is "asynchronous", but it doesn't
+					// use promises, so I can't use await or fetch-then-catch. Check https://github.com/jakearchibald/idb to see if this fixes things.
+					alert("[ServiceWorker] Successfully saved <" + iconValue + "> to indexedDB!");
+					let data = completeEvent.target.result;
+					console.log("Data from indexedDB:", data);
+					
+				};
+				dbRequest.onerror = (errorEvent) => {
+					console.log("[ServiceWorker] Error when trying to add <" + iconValue + "> to indexedDB");
+				};
 			});
-		})
-	);
+		}
+		else{
+			console.log("[ServiceWorker] did nothing: method was " + req.method);
+		}
+	}
+	else if(/^.*\/auth_config.json$/.test(urlPath)){
+		// Stale-while-revalidate for auth_config.json
+		evt.respondWith(
+			caches.open(CACHE_NAME).then((cache) => {
+				return cache.match(req).then((response) => {
+					const fetchPromise = fetch(req).then((networkResponse) => {
+						cache.add(req, networkResponse.clone());
+						return networkResponse;
+					});
+					
+					return response || fetchPromise;
+				});
+			})
+		);
+	}
+	else if(url.origin === location.origin){ // Handle requests for static files on homepage
+		evt.respondWith( // Network request first
+			fetch(req)
+			.catch((reason) => {
+				console.log("[ServiceWorker] Failed network request, serving cached files.", reason);
+				return caches.open(CACHE_NAME).then((cache) => {
+					return cache.match(req);
+				});
+			})
+		);
+	}
 });

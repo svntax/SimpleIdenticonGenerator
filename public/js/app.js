@@ -66,21 +66,35 @@ const updateUI = async () => {
 
 const fetchUserData = async () => {
 	try{
-		const token = await auth0.getTokenSilently();
-		
-		const response = await fetch("/api/identicon", {
-			headers: {
-				Authorization: `Bearer ${token}`
+		if(navigator.onLine){
+			const token = await auth0.getTokenSilently();
+			const response = await fetch("/api/identicon", {
+				headers: {
+					Authorization: `Bearer ${token}`
+				}
+			});
+			if(response.ok){
+				const responseData = await response.json();
+				console.log("Got user data.", responseData);
+				updateIdenticonList(responseData);
 			}
-		});
-		if(response.status === 200){
+		}
+		else{
+			//TODO: if user logs in, logs out, then goes offline, old icons list in cache is served
+			const response = await fetch("/api/identicon");
 			const responseData = await response.json();
-			console.log("Got user data.", responseData);
+			console.log("Got offline user data:", responseData);
 			updateIdenticonList(responseData);
 		}
 	}
 	catch(err){
-		console.error(err);
+		if(err.error === "login_required"){
+			// Do nothing
+			console.log("User not logged in when trying to fetch user data.");
+		}
+		else{
+			console.error(err);
+		}
 	}
 }
 
@@ -88,30 +102,38 @@ const removeIdenticon = async (evt) => {
 	const iconData = evt.srcElement.parentNode.querySelector(".identicons-list-text").innerText;
 	console.log("Removing identicon: " + iconData);	
 	try{
-		const token = await auth0.getTokenSilently();
-		const response = await fetch("/api/identicon", {
-			method: "DELETE",
-			headers: {
-				"Content-Type": "application/json",
-				Authorization: `Bearer ${token}`
-			},
-			body: JSON.stringify({
-				iconValue: iconData
-			})
-		});
-		if(response.status === 200){
-			const responseData = await response.json();
-			updateIdenticonList(responseData);
+		if(navigator.onLine){
+			const token = await auth0.getTokenSilently();
+			const response = await fetch("/api/identicon", {
+				method: "DELETE",
+				headers: {
+					"Content-Type": "application/json",
+					Authorization: `Bearer ${token}`
+				},
+				body: JSON.stringify({
+					iconValue: iconData
+				})
+			});
+			if(response.ok){
+				const responseData = await response.json();
+				//updateIdenticonList(responseData);
+				evt.srcElement.parentNode.remove();
+			}
+			else{
+				const responseData = await response.json();
+				console.log(responseData.msg);
+			}
 		}
 		else{
-			const responseData = await response.json();
-			console.log(responseData.msg);
+			evt.srcElement.parentNode.remove();
+			console.log("Removed <" + iconData + "> while offline");
+			//TODO: start making service worker periodically check if online again to send PUT request
 		}
 	}
 	catch(err){
 		if(err.error === "login_required"){
 			//TODO: offline removing
-			console.log("Could not save identicon: Login required");
+			console.log("Could not remove identicon: Login required");
 		}
 		else{
 			console.log("Could not remove identicon.", err);
@@ -119,6 +141,7 @@ const removeIdenticon = async (evt) => {
 	}
 };
 
+// Creates and returns a new list element
 const createIconEntry = (iconValue) => {
 	const temp = document.getElementsByTagName("template")[0];
 	
@@ -130,6 +153,14 @@ const createIconEntry = (iconValue) => {
 	return newNode;
 };
 
+// Add an individual icon entry to the identicons list
+const addIconEntry = (iconValue) => {
+	let entry = createIconEntry(iconValue);
+	const identiconList = document.querySelector(".identicons-list");
+	identiconList.appendChild(entry);
+};
+
+// Replaces the entire identicons list with the new given list
 const updateIdenticonList = (jsonList) => {
 	const identiconsList = document.querySelector(".identicons-list");
 	while(identiconsList.firstChild){
@@ -160,6 +191,14 @@ const callApi = async () => {
 		}
 	}
 	catch(err){
+		console.log("callApi() error"); //TODO: offline functionality
+		//Also, probably not a good idea to store access token in Cache, so maybe when offline, here's how service worker should work:
+		// - GET: cache first then fetch and save response, or if cache doesn't exist then fetch
+		// - POST if online: Do NOT cache, just locally update the icons list, then update the cache entry for GET with new data
+		// - POST if offline: Locally update icons list, then when user is back online, send PUT request with updated icons list
+		// - DELETE if online: Locally update icons list, then update cache entry for GET with the updated icons list
+		// - DELETE if offline: Locally update icons list, then when user is back online, send PUT request with updated icons list
+		// - PUT (*new*): used only when user wants to completely overwrite the json in server with the current local icons list
 		console.error(err);
 	}
 };
@@ -180,25 +219,32 @@ const saveIdenticon = async () => {
 	}
 	
 	try{
-		const token = await auth0.getTokenSilently();
-		const response = await fetch("/api/identicon", {
-			method: "POST",
-			headers: {
-				"Content-Type": "application/json",
-				Authorization: `Bearer ${token}`
-			},
-			body: JSON.stringify({
-				iconValue: iconData
-			})
-		});
-		if(response.status === 200){
-			const responseData = await response.json();
-			console.log("Identicon saved: ", responseData);
-			updateIdenticonList(responseData);
+		if(navigator.onLine){
+			const token = await auth0.getTokenSilently();
+			const response = await fetch("/api/identicon", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+					Authorization: `Bearer ${token}`
+				},
+				body: JSON.stringify({
+					iconValue: iconData
+				})
+			});
+			if(response.ok){
+				//const responseData = await response.text();
+				//console.log(response.text());
+				addIconEntry(iconData);
+			}
+			else{
+				const responseData = await response.json();
+				console.log(responseData.msg);
+			}
 		}
 		else{
-			const responseData = await response.json();
-			console.log(responseData.msg);
+			addIconEntry(iconData);
+			console.log("Added <" + iconData + "> while offline");
+			//TODO: start making service worker periodically check if online again to send PUT request
 		}
 	}
 	catch(err){
@@ -234,7 +280,12 @@ logoutButton.onclick = logout;
 window.onload = async () => {
 	jdenticon.update(iconImage, "icon value");
 	
-	await configureClient();
+	try{
+		await configureClient();
+	}
+	catch(err){
+		console.log("configureClient() error:", err);
+	}
 	
 	updateUI();
 	
@@ -243,7 +294,6 @@ window.onload = async () => {
 	if(isAuthenticated){
 		window.history.replaceState({}, document.title, window.location.pathname);
 		updateUI();
-		console.log("Fetching user data...");
 		fetchUserData();
 		return;
 	}
@@ -252,8 +302,8 @@ window.onload = async () => {
 	if(query.includes("code=") && query.includes("state=")){
 		await auth0.handleRedirectCallback();
 		updateUI();
-		console.log("Fetching user data...");
-		fetchUserData();
 		window.history.replaceState({}, document.title, "/");
 	}
+	
+	fetchUserData();
 };
