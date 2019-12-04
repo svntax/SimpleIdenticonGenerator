@@ -100,7 +100,6 @@ const fetchUserData = async () => {
 
 const removeIdenticon = async (evt) => {
 	const iconData = evt.srcElement.parentNode.querySelector(".identicons-list-text").innerText;
-	console.log("Removing identicon: " + iconData);	
 	try{
 		if(navigator.onLine){
 			const token = await auth0.getTokenSilently();
@@ -206,7 +205,6 @@ document.getElementById("btn-call-api").onclick = callApi;
 
 const saveIdenticon = async () => {
 	const iconData = currentIconValue;
-	console.log("Saving " + iconData + " to favorites...");
 	
 	// Client-side check: is the identicon already saved
 	const identiconsList = document.querySelector(".identicons-list").children;
@@ -244,7 +242,7 @@ const saveIdenticon = async () => {
 		else{
 			addIconEntry(iconData);
 			console.log("Added <" + iconData + "> while offline");
-			//TODO: start making service worker periodically check if online again to send PUT request
+			//TODO: start making service worker periodically check if online again to send PUT request (maybe using background sync API?)
 		}
 	}
 	catch(err){

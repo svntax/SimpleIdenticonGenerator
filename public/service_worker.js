@@ -48,7 +48,7 @@ self.addEventListener("activate", (evt) => {
 	};
 	request.onupgradeneeded = (upgradeEvent) => {
 		const dbRef = upgradeEvent.target.result;
-		const objectStore = dbRef.createObjectStore("iconList", { autoIncrement: true });
+		const objectStore = dbRef.createObjectStore("iconList");
 		//objectStore variable is unused, but we still needed to create the object store anyway
 	};
 	
@@ -88,23 +88,34 @@ self.addEventListener("fetch", async (evt) => {
 		}
 		else if(req.method === "POST"){
 			// Save new identicon to indexedDB
-			req.json().then((jsonData) => {
+			req.clone().json().then((jsonData) => {
 				const iconValue = jsonData.iconValue;
 				console.log("[ServiceWorker] Saving <" + iconValue + "> to indexedDB...");
 				
-				const objectStore = db.transaction("iconList", "readwrite").objectStore("iconList");
-				let dbRequest = objectStore.add(iconValue);
-				dbRequest.oncomplete = (completeEvent) => {
-					// TODO: https://github.com/jakearchibald/idb
-					// FOR SOME REASON oncomplete and onerror do NOT run for these indexedDB requests. The reason is probably b/c indexedDB is "asynchronous", but it doesn't
-					// use promises, so I can't use await or fetch-then-catch. Check https://github.com/jakearchibald/idb to see if this fixes things.
-					alert("[ServiceWorker] Successfully saved <" + iconValue + "> to indexedDB!");
+				let dbRequest = db.transaction("iconList", "readwrite").objectStore("iconList").add(iconValue, iconValue); // Key and value will be the same
+				dbRequest.onsuccess = (completeEvent) => {
+					console.log("[ServiceWorker] Successfully saved <" + iconValue + "> to indexedDB!");
 					let data = completeEvent.target.result;
-					console.log("Data from indexedDB:", data);
-					
 				};
 				dbRequest.onerror = (errorEvent) => {
 					console.log("[ServiceWorker] Error when trying to add <" + iconValue + "> to indexedDB");
+				};
+			});
+		}
+		else if(req.method === "DELETE"){
+			// Save new identicon to indexedDB
+			req.clone().json().then((jsonData) => {
+				const iconValue = jsonData.iconValue;
+				console.log("[ServiceWorker] Deleting <" + iconValue + "> from indexedDB...");
+				
+				let dbRequest = db.transaction("iconList", "readwrite").objectStore("iconList").delete(iconValue);
+				dbRequest.onsuccess = (completeEvent) => {
+					//TODO: for some reason this runs even when deleting a non-existant iconValue?
+					console.log("[ServiceWorker] Successfully deleted <" + iconValue + "> from indexedDB!");
+					let data = completeEvent.target.result;
+				};
+				dbRequest.onerror = (errorEvent) => {
+					console.log("[ServiceWorker] Error when trying to delete <" + iconValue + "> from indexedDB");
 				};
 			});
 		}
