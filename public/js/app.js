@@ -75,12 +75,10 @@ const fetchUserData = async () => {
 			});
 			if(response.ok){
 				const responseData = await response.json();
-				console.log("Got user data.", responseData);
 				updateIdenticonList(responseData);
 			}
 		}
 		else{
-			//TODO: if user logs in, logs out, then goes offline, old icons list in cache is served
 			const response = await fetch("/api/identicon");
 			const responseData = await response.json();
 			console.log("Got offline user data:", responseData);
@@ -101,9 +99,12 @@ const fetchUserData = async () => {
 const removeIdenticon = async (evt) => {
 	const iconData = evt.srcElement.parentNode.querySelector(".identicons-list-text").innerText;
 	try{
+		evt.srcElement.parentNode.remove();
+		let response = null;
 		if(navigator.onLine){
+			// Get and send access token if online
 			const token = await auth0.getTokenSilently();
-			const response = await fetch("/api/identicon", {
+			response = await fetch("/api/identicon", {
 				method: "DELETE",
 				headers: {
 					"Content-Type": "application/json",
@@ -113,20 +114,25 @@ const removeIdenticon = async (evt) => {
 					iconValue: iconData
 				})
 			});
-			if(response.ok){
-				const responseData = await response.json();
-				//updateIdenticonList(responseData);
-				evt.srcElement.parentNode.remove();
-			}
-			else{
-				const responseData = await response.json();
-				console.log(responseData.msg);
-			}
 		}
 		else{
-			evt.srcElement.parentNode.remove();
-			console.log("Removed <" + iconData + "> while offline");
-			//TODO: start making service worker periodically check if online again to send PUT request
+			// If offline, don't attempt to get user's access token to send in the request
+			response = await fetch("/api/identicon", {
+				method: "DELETE",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({
+					iconValue: iconData
+				})
+			});
+		}
+		if(response.ok){
+			// DELETE was successful
+		}
+		else{
+			const responseData = await response.json();
+			console.log(responseData.msg);
 		}
 	}
 	catch(err){
@@ -217,9 +223,12 @@ const saveIdenticon = async () => {
 	}
 	
 	try{
+		addIconEntry(iconData);
+		let response = null;
 		if(navigator.onLine){
+			// Get and send access token if online
 			const token = await auth0.getTokenSilently();
-			const response = await fetch("/api/identicon", {
+			response = await fetch("/api/identicon", {
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json",
@@ -229,20 +238,25 @@ const saveIdenticon = async () => {
 					iconValue: iconData
 				})
 			});
-			if(response.ok){
-				//const responseData = await response.text();
-				//console.log(response.text());
-				addIconEntry(iconData);
-			}
-			else{
-				const responseData = await response.json();
-				console.log(responseData.msg);
-			}
 		}
 		else{
-			addIconEntry(iconData);
-			console.log("Added <" + iconData + "> while offline");
-			//TODO: start making service worker periodically check if online again to send PUT request (maybe using background sync API?)
+			// If offline, don't attempt to get user's access token to send in the request
+			response = await fetch("/api/identicon", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({
+					iconValue: iconData
+				})
+			});
+		}
+		if(response.ok){
+			// POST was successful
+		}
+		else{
+			const responseData = await response.json();
+			console.log(responseData.msg);
 		}
 	}
 	catch(err){

@@ -71,53 +71,65 @@ self.addEventListener("fetch", async (evt) => {
 	
 	if(/^\/api\/.+$/.test(urlPath)){ // Handle API requests
 		if(req.method === "GET"){
-			// Stale-while-revalidate strategy for GET request
+			// Network response first, then save to cache
 			evt.respondWith(
 				caches.open(CACHE_NAME).then((cache) => {
-					return cache.match(req).then((response) => {
-						console.log("GET cache", response);
-						const fetchPromise = fetch(req).then((networkResponse) => {
-							cache.add(req, networkResponse.clone()); //TODO: is the access token being saved here? You should probably make the key the URL or something, NOT the request itself
-							return networkResponse;
+					return fetch(req).then((response) => {
+						cache.put(req, response.clone());
+						return response;
+					});
+				})
+				.catch((reason) => {
+					return caches.open(CACHE_NAME).then((cache) => {
+						console.log("[ServiceWorker] Returning cached GET response");
+						return cache.match(req).then((response) => {
+							return response;
 						});
-						
-						return response || fetchPromise;
 					});
 				})
 			);
 		}
 		else if(req.method === "POST"){
-			// Save new identicon to indexedDB
-			req.clone().json().then((jsonData) => {
-				const iconValue = jsonData.iconValue;
-				console.log("[ServiceWorker] Saving <" + iconValue + "> to indexedDB...");
-				
-				let dbRequest = db.transaction("iconList", "readwrite").objectStore("iconList").add(iconValue, iconValue); // Key and value will be the same
-				dbRequest.onsuccess = (completeEvent) => {
-					console.log("[ServiceWorker] Successfully saved <" + iconValue + "> to indexedDB!");
-					let data = completeEvent.target.result;
-				};
-				dbRequest.onerror = (errorEvent) => {
-					console.log("[ServiceWorker] Error when trying to add <" + iconValue + "> to indexedDB");
-				};
-			});
+			evt.respondWith(
+				fetch(req.clone()).finally(() => { //Need to clone() because otherwise req would already be consumed when finally() runs
+					// Save new identicon to indexedDB
+					req.json().then((jsonData) => {
+						const iconValue = jsonData.iconValue;
+						console.log("[ServiceWorker] Saving <" + iconValue + "> to indexedDB...");
+						
+						let dbRequest = db.transaction("iconList", "readwrite").objectStore("iconList").add(iconValue, iconValue); // Key and value will be the same
+						dbRequest.onsuccess = (completeEvent) => {
+							console.log("[ServiceWorker] Successfully saved <" + iconValue + "> to indexedDB!");
+							let data = completeEvent.target.result;
+						};
+						dbRequest.onerror = (errorEvent) => {
+							//TODO: this runs when trying to add an already-existing iconValue
+							console.log("[ServiceWorker] Error when trying to add <" + iconValue + "> to indexedDB");
+						};
+					});
+				})
+			);
 		}
 		else if(req.method === "DELETE"){
-			// Save new identicon to indexedDB
-			req.clone().json().then((jsonData) => {
-				const iconValue = jsonData.iconValue;
-				console.log("[ServiceWorker] Deleting <" + iconValue + "> from indexedDB...");
-				
-				let dbRequest = db.transaction("iconList", "readwrite").objectStore("iconList").delete(iconValue);
-				dbRequest.onsuccess = (completeEvent) => {
-					//TODO: for some reason this runs even when deleting a non-existant iconValue?
-					console.log("[ServiceWorker] Successfully deleted <" + iconValue + "> from indexedDB!");
-					let data = completeEvent.target.result;
-				};
-				dbRequest.onerror = (errorEvent) => {
-					console.log("[ServiceWorker] Error when trying to delete <" + iconValue + "> from indexedDB");
-				};
-			});
+			evt.respondWith(
+				fetch(req.clone()).finally(() => { //Need to clone() because otherwise req would already be consumed when finally() runs
+					// Remove given identicon from indexedDB
+					req.clone().json().then((jsonData) => {
+						const iconValue = jsonData.iconValue;
+						console.log("[ServiceWorker] Deleting <" + iconValue + "> from indexedDB...");
+						
+						let dbRequest = db.transaction("iconList", "readwrite").objectStore("iconList").delete(iconValue);
+						dbRequest.onsuccess = (completeEvent) => {
+							//TODO: for some reason this runs even when deleting a non-existant iconValue?
+							console.log("[ServiceWorker] Successfully deleted <" + iconValue + "> from indexedDB!");
+							let data = completeEvent.target.result;
+						};
+						dbRequest.onerror = (errorEvent) => {
+							console.log("[ServiceWorker] Error when trying to delete <" + iconValue + "> from indexedDB");
+						};
+					});
+				})
+			);
 		}
 		else{
 			console.log("[ServiceWorker] did nothing: method was " + req.method);
