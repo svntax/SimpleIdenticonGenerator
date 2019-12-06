@@ -1,6 +1,6 @@
 "use strict";
 
-const CACHE_NAME = "static-cache-v2";
+const CACHE_NAME = "static-cache-v1";
 const DB_NAME = "small-db";
 
 let db; // Database reference
@@ -55,7 +55,23 @@ self.addEventListener("activate", (evt) => {
 	self.clients.claim();
 });
 
-self.addEventListener("fetch", async (evt) => {
+// Saves each entry in the iconList array to indexedDB
+function saveIconListToIDB(iconList){
+	for(let i = 0; i < iconList.length; i++){
+		const iconValue = iconList[i];
+		let dbRequest = db.transaction("iconList", "readwrite").objectStore("iconList").add(iconValue, iconValue); // Key, value
+		dbRequest.onsuccess = (completeEvent) => {
+			let data = completeEvent.target.result;
+			console.log("[ServiceWorker] Saved " + data + " to indexedDB.");
+		};
+		dbRequest.onerror = (errorEvent) => {
+			// A ConstraintError will be thrown when trying to add an already-existing key
+			console.log("[ServiceWorker:GET response] Error when trying to add <" + iconValue + "> to indexedDB: ", errorEvent.target.error.name);
+		};
+	}
+};
+
+self.addEventListener("fetch", (evt) => {
 	/*
 	evt.respondWith( //Cache first
 		caches.open(CACHE_NAME).then((cache) => {
@@ -76,6 +92,12 @@ self.addEventListener("fetch", async (evt) => {
 				caches.open(CACHE_NAME).then((cache) => {
 					return fetch(req).then((response) => {
 						cache.put(req, response.clone());
+						
+						// Update indexedDB with the data from the response
+						response.clone().json().then((responseData) => {
+							saveIconListToIDB(responseData.iconList);
+						});
+						
 						return response;
 					});
 				})
