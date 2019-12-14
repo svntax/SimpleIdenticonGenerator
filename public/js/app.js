@@ -78,6 +78,32 @@ const updateUI = async () => {
 	}
 };
 
+function getIconsDataFromIDB(){
+	const request = indexedDB.open("small-db", 1);
+	request.onerror = (errorEvent) => {
+		console.log("Error creating local database.");
+	};
+	request.onsuccess = (successEvent) => {
+		let db = successEvent.target.result;
+		
+		let jsonObject = {iconList: []};
+		let dbRequest = db.transaction("iconList", "readonly").objectStore("iconList").openCursor();
+		dbRequest.onsuccess = (successEvt) => {
+			let cursor = successEvt.target.result;
+			if(cursor){
+				jsonObject.iconList.push(cursor.value);
+				cursor.continue();
+			}
+			else{
+				console.log("Finished iterating through IDB icons list.");
+				updateIdenticonList(jsonObject);
+			}
+			
+			db.close();
+		};
+	};
+}
+
 const fetchUserData = async () => {
 	try{
 		if(navigator.onLine){
@@ -96,7 +122,8 @@ const fetchUserData = async () => {
 			const response = await fetch("/api/identicon");
 			const responseData = await response.json();
 			console.log("Got offline user data:", responseData);
-			updateIdenticonList(responseData);
+			//updateIdenticonList(responseData);
+			getIconsDataFromIDB();
 		}
 	}
 	catch(err){

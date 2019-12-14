@@ -64,8 +64,8 @@ function saveIconListToIDB(iconList){
 	for(let i = 0; i < iconList.length; i++){
 		const iconValue = iconList[i];
 		let dbRequest = db.transaction("iconList", "readwrite").objectStore("iconList").add(iconValue, iconValue); // Key, value
-		dbRequest.onsuccess = (completeEvent) => {
-			let data = completeEvent.target.result;
+		dbRequest.onsuccess = (successEvt) => {
+			let data = successEvt.target.result;
 			console.log("[ServiceWorker] Saved " + data + " to indexedDB.");
 		};
 		dbRequest.onerror = (errorEvent) => {
