@@ -26,6 +26,22 @@ self.addEventListener("install", (evt) => {
 	self.skipWaiting();
 });
 
+function createIndexedDB(){
+	const request = indexedDB.open(DB_NAME, 1);
+	request.onerror = (errorEvent) => {
+		console.log("Error creating local database.");
+	};
+	request.onsuccess = (successEvent) => {
+		console.log("Successfully created indexedDB.");
+		db = successEvent.target.result;
+	};
+	request.onupgradeneeded = (upgradeEvent) => {
+		const dbRef = upgradeEvent.target.result;
+		const objectStore = dbRef.createObjectStore("iconList");
+		//objectStore variable is unused, but we still needed to create the object store anyway
+	};
+}
+
 self.addEventListener("activate", (evt) => {
 	evt.waitUntil(
 		caches.keys().then((keyList) => {
@@ -38,19 +54,7 @@ self.addEventListener("activate", (evt) => {
 		})
 	);
 	
-	//Create indexedDB database
-	const request = indexedDB.open(DB_NAME, 1);
-	request.onerror = (errorEvent) => {
-		console.log("Error creating local database.");
-	};
-	request.onsuccess = (successEvent) => {
-		db = successEvent.target.result;
-	};
-	request.onupgradeneeded = (upgradeEvent) => {
-		const dbRef = upgradeEvent.target.result;
-		const objectStore = dbRef.createObjectStore("iconList");
-		//objectStore variable is unused, but we still needed to create the object store anyway
-	};
+	createIndexedDB();
 	
 	self.clients.claim();
 });

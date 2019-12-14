@@ -43,6 +43,7 @@ const configureClient = async () => {
 const updateUI = async () => {
 	const loginBtn = document.getElementById("btn-login");
 	const logoutBtn = document.getElementById("btn-logout");
+	const offlineBtn = document.getElementById("btn-offline");
 	
 	const isAuthenticated = await auth0.isAuthenticated();
 	
@@ -61,6 +62,19 @@ const updateUI = async () => {
 		
 		loginBtn.disabled = false;
 		loginBtn.classList.remove("hidden");
+	}
+	
+	if(navigator.onLine){
+		offlineBtn.classList.add("hidden");
+	}
+	else{
+		offlineBtn.classList.remove("hidden");
+		
+		loginBtn.disabled = true;
+		loginBtn.classList.add("hidden");
+		
+		logoutBtn.disabled = true;
+		logoutBtn.classList.add("hidden");
 	}
 };
 
