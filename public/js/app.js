@@ -340,12 +340,6 @@ const saveIdenticon = async () => {
 					iconValue: iconData
 				})
 			});
-			if(response.ok){
-				// POST method was successful
-			}
-			else{
-				console.log("POST status: ", response.status);
-			}
 		}
 		else{
 			// If offline, don't attempt to get user's access token to send in the request

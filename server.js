@@ -145,8 +145,8 @@ app.post("/api/identicon", checkJwt, (req, res) => {
 				};
 				const newJsonData = JSON.stringify(newJsonObject);
 				updateUserData(userId, newJsonData);
-				// Send new json back to user
-				res.json(newJsonObject);
+				//Send confirmation
+				res.status(201).send("Identicon successfully added.");
 			}
 		}
 		else{
@@ -166,7 +166,7 @@ app.put("/api/identicon", checkJwt, (req, res) => {
 			console.log(req.body);
 			const newJsonData = JSON.stringify(req.body);
 			updateUserData(userId, newJsonData);
-			res.status(201).send("User data successfully synced.");
+			res.status(200).send("User data successfully synced.");
 		}
 		else{
 			console.log("Could not find user: " + userId);
@@ -190,8 +190,7 @@ app.delete("/api/identicon", checkJwt, (req, res) => {
 					jsonObject.iconList.splice(iconIndex, 1);
 					const newJsonData = JSON.stringify(jsonObject);
 					updateUserData(userId, newJsonData);
-					//Send updated json back to user
-					res.json(jsonObject);
+					res.status(200).send("Identicon successfully deleted.");
 				}
 				else{
 					res.status(400).send({
