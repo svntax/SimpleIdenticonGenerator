@@ -81,11 +81,10 @@ const updateUI = async () => {
 function getIconsDataFromIDB(){
 	const request = indexedDB.open("small-db", 1);
 	request.onerror = (errorEvent) => {
-		console.log("Error creating local database.");
+		console.log("Error opening local database.");
 	};
 	request.onsuccess = (successEvent) => {
-		let db = successEvent.target.result;
-		
+		const db = successEvent.target.result;
 		let jsonObject = {iconList: []};
 		let dbRequest = db.transaction("iconList", "readonly").objectStore("iconList").openCursor();
 		dbRequest.onsuccess = (successEvt) => {
@@ -104,25 +103,90 @@ function getIconsDataFromIDB(){
 	};
 }
 
+// Replaces the user's online stored data with the offline changes made and stored locally
+const replaceUserData = async () => {
+	try{
+		// Get icons from indexedDB
+		const request = indexedDB.open("small-db", 1);
+		request.onerror = (errorEvent) => {
+			console.log("Error opening local database.");
+		};
+		request.onsuccess = (successEvent) => {
+			const db = successEvent.target.result;
+			let jsonObject = {iconList: []};
+			let dbRequest = db.transaction("iconList", "readonly").objectStore("iconList").openCursor();
+			dbRequest.onsuccess = async (successEvt) => {
+				let cursor = successEvt.target.result;
+				if(cursor){
+					jsonObject.iconList.push(cursor.value);
+					cursor.continue();
+				}
+				else{
+					// Finished getting icons from indexeDB, now format as JSON and send PUT request
+					const token = await auth0.getTokenSilently();
+					const response = await fetch("/api/identicon", {
+						method: "PUT",
+						headers: {
+							"Content-Type": "application/json",
+							Authorization: `Bearer ${token}`
+						},
+						body: JSON.stringify(jsonObject)
+					});
+					if(response.ok){
+						localStorage.setItem("syncFlag", false);
+						console.log("Successfully finished syncing offline changes!");
+					}
+					else{
+						console.log("PUT was not response.ok");
+						//const responseData = await response.json();
+						//console.log(responseData.msg);
+					}
+					
+					updateIdenticonList(jsonObject);
+				}
+				
+				db.close();
+			};
+		};
+	}
+	catch(err){
+		if(err.error === "login_required"){
+			console.log("Error: PUT request made while logged out.");
+		}
+		else{
+			console.log("PUT request error:", err);
+		}
+	}
+};
+
 const fetchUserData = async () => {
 	try{
 		if(navigator.onLine){
-			const token = await auth0.getTokenSilently();
-			const response = await fetch("/api/identicon", {
-				headers: {
-					Authorization: `Bearer ${token}`
+			// Check if offline changes were made, and if so, sync those changes to the user's online data.
+			const syncNeeded = JSON.parse(localStorage.getItem("syncFlag"));
+			if(syncNeeded){
+				console.log("Need to sync offline changes to user's account...");
+				replaceUserData();
+			}
+			else{
+				// Send GET request only if offline changes do not need to be synced.
+				const token = await auth0.getTokenSilently();
+				const response = await fetch("/api/identicon", {
+					headers: {
+						Authorization: `Bearer ${token}`
+					}
+				});
+				if(response.ok){
+					const responseData = await response.json();
+					updateIdenticonList(responseData);
 				}
-			});
-			if(response.ok){
-				const responseData = await response.json();
-				updateIdenticonList(responseData);
 			}
 		}
 		else{
-			const response = await fetch("/api/identicon");
+			/*const response = await fetch("/api/identicon");
 			const responseData = await response.json();
-			console.log("Got offline user data:", responseData);
-			//updateIdenticonList(responseData);
+			console.log("Got offline user data:", responseData);*/
+			localStorage.setItem("syncFlag", true);
 			getIconsDataFromIDB();
 		}
 	}
@@ -183,6 +247,10 @@ const removeIdenticon = async (evt) => {
 		}
 		else{
 			console.log("Could not remove identicon.", err);
+			if(!navigator.onLine){
+				// DELETE method failed and user is offline, so syncing is needed
+				localStorage.setItem("syncFlag", true);
+			}
 		}
 	}
 };
@@ -237,14 +305,7 @@ const callApi = async () => {
 		}
 	}
 	catch(err){
-		console.log("callApi() error"); //TODO: offline functionality
-		//Also, probably not a good idea to store access token in Cache, so maybe when offline, here's how service worker should work:
-		// - GET: cache first then fetch and save response, or if cache doesn't exist then fetch
-		// - POST if online: Do NOT cache, just locally update the icons list, then update the cache entry for GET with new data
-		// - POST if offline: Locally update icons list, then when user is back online, send PUT request with updated icons list
-		// - DELETE if online: Locally update icons list, then update cache entry for GET with the updated icons list
-		// - DELETE if offline: Locally update icons list, then when user is back online, send PUT request with updated icons list
-		// - PUT (*new*): used only when user wants to completely overwrite the json in server with the current local icons list
+		console.log("callApi() error");
 		console.error(err);
 	}
 };
@@ -279,6 +340,12 @@ const saveIdenticon = async () => {
 					iconValue: iconData
 				})
 			});
+			if(response.ok){
+				// POST method was successful
+			}
+			else{
+				console.log("POST status: ", response.status);
+			}
 		}
 		else{
 			// If offline, don't attempt to get user's access token to send in the request
@@ -307,6 +374,10 @@ const saveIdenticon = async () => {
 		}
 		else{
 			console.log("Could not save identicon.", err);
+			if(!navigator.onLine){
+				// POST method failed and user is offline, so syncing is needed
+				localStorage.setItem("syncFlag", true);
+			}
 		}
 	}
 };

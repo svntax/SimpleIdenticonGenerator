@@ -155,6 +155,25 @@ app.post("/api/identicon", checkJwt, (req, res) => {
 	});
 });
 
+// Replace user's icons list in database
+app.put("/api/identicon", checkJwt, (req, res) => {
+	const userId = req.user.sub;
+	connection.query(`SELECT icons_list FROM users WHERE user_id = '${userId}'`, (err, result, fields) => {
+		if (err) throw err;
+		if(result.length > 0){
+			// Insert new json data
+			console.log("Replacing icons list json for " + userId);
+			console.log(req.body);
+			const newJsonData = JSON.stringify(req.body);
+			updateUserData(userId, newJsonData);
+			res.status(201).send("User data successfully synced.");
+		}
+		else{
+			console.log("Could not find user: " + userId);
+		}
+	});
+});
+
 app.delete("/api/identicon", checkJwt, (req, res) => {
 	const userId = req.user.sub;
 	console.log("DELETE request from user " + userId + " for " + req.body.iconValue);

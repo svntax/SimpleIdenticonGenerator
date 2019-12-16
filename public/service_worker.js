@@ -99,7 +99,21 @@ self.addEventListener("fetch", (evt) => {
 						
 						// Update indexedDB with the data from the response
 						response.clone().json().then((responseData) => {
-							saveIconListToIDB(responseData.iconList);
+							if(db){
+								saveIconListToIDB(responseData.iconList);
+							}
+							else{
+								console.log("[ServiceWorker] needed to re-open indexedDB connection.");
+								const request = indexedDB.open(DB_NAME, 1);
+								request.onerror = (errorEvent) => {
+									console.log("Error re-opening indexedDB.");
+								};
+								request.onsuccess = (successEvent) => {
+									console.log("Successfully opened indexedDB.");
+									db = successEvent.target.result;
+									saveIconListToIDB(responseData.iconList);
+								};
+							}
 						});
 						
 						return response;
