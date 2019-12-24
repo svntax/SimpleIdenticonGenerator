@@ -64,25 +64,6 @@ const updateUserData = (userId, jsonData) => {
 	});
 };
 
-// Debug endpoint
-app.get("/api/external", checkJwt, checkScopes, (req, res) => {
-	const userId = req.user.sub;
-	res.send({
-		msg: "Your access token was successfully validated!"
-	});
-	connection.query(`SELECT * FROM users WHERE user_id = '${userId}'`, (err, result, fields) => {
-		if (err) throw err;
-		console.log(result);
-		if(result.length > 0){
-			console.log("Found user: " + userId);
-		}
-		else{
-			console.log("Could not find user: " + userId);
-			createUser(userId);
-		}
-	});		
-});
-
 // Get user data
 app.get("/api/identicon", checkJwt, (req, res) => {
 	const userId = req.user.sub;

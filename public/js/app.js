@@ -47,8 +47,6 @@ const updateUI = async () => {
 	
 	const isAuthenticated = await auth0.isAuthenticated();
 	
-	document.getElementById("btn-call-api").disabled = !isAuthenticated;
-	
 	if(isAuthenticated){
 		logoutBtn.disabled = false;
 		logoutBtn.classList.remove("hidden");
@@ -287,29 +285,6 @@ const updateIdenticonList = (jsonList) => {
 		identiconsList.appendChild(entry);
 	}
 };
-
-const callApi = async () => {
-	try{
-		const token = await auth0.getTokenSilently();
-		
-		const response = await fetch("/api/external", {
-			headers: {
-				Authorization: `Bearer ${token}`
-			}
-		});
-		if(response.status === 200){
-			const responseData = await response.json();
-			
-			const responseElement = document.getElementById("api-call-result");
-			responseElement.innerText = JSON.stringify(responseData, {}, 2);
-		}
-	}
-	catch(err){
-		console.log("callApi() error");
-		console.error(err);
-	}
-};
-document.getElementById("btn-call-api").onclick = callApi;
 
 const saveIdenticon = async () => {
 	const iconData = currentIconValue;
