@@ -143,7 +143,7 @@ self.addEventListener("fetch", (evt) => {
 							let data = completeEvent.target.result;
 						};
 						dbRequest.onerror = (errorEvent) => {
-							//TODO: this runs when trying to add an already-existing iconValue
+							//Note: this runs when trying to add an already-existing iconValue
 							console.log("[ServiceWorker] Error when trying to add <" + iconValue + "> to indexedDB");
 						};
 					});

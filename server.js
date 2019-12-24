@@ -110,7 +110,6 @@ app.get("/api/identicon", checkJwt, (req, res) => {
 });
 
 // Update user's icons list in database
-// TODO: limit max number of entries to icons list
 app.post("/api/identicon", checkJwt, (req, res) => {
 	const userId = req.user.sub;
 	connection.query(`SELECT icons_list FROM users WHERE user_id = '${userId}'`, (err, result, fields) => {

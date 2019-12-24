@@ -384,6 +384,20 @@ const login = async () => {
 };
 
 const logout = () => {
+	// Clear the local indexedDB
+	const request = indexedDB.open("small-db", 1);
+	request.onerror = (errorEvent) => {
+		console.log("Error opening local database.");
+	};
+	request.onsuccess = (successEvent) => {
+		const db = successEvent.target.result;
+		let dbRequest = db.transaction("iconList", "readwrite").objectStore("iconList").clear();
+		dbRequest.onsuccess = (successEvt) => {
+			console.log("Successfully cleared local indexedDB");
+			db.close();
+		};
+	};
+	
 	auth0.logout({
 		returnTo: window.location.origin
 	});
@@ -403,6 +417,7 @@ window.onload = async () => {
 	}
 	catch(err){
 		console.log("configureClient() error:", err);
+		console.log("auth0 var:", auth0);
 	}
 	
 	updateUI();
