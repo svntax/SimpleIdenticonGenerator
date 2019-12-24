@@ -71,7 +71,6 @@ app.get("/api/identicon", checkJwt, (req, res) => {
 		if (err) throw err;
 		if(result.length > 0){
 			// Existing user, get icons list and send to client
-			console.log("Found user: " + userId);
 			const jsonEntry = JSON.parse(JSON.stringify(result))[0].icons_list;
 			if(jsonEntry){
 				const jsonObject = JSON.parse(jsonEntry);
@@ -83,7 +82,7 @@ app.get("/api/identicon", checkJwt, (req, res) => {
 		}
 		else{
 			// New user, so add to database
-			console.log("Could not find user: " + userId);
+			console.log("Could not find user: " + userId + ". Adding user to database...");
 			createUser(userId);
 			res.json({iconList: []});
 		}
@@ -131,6 +130,9 @@ app.post("/api/identicon", checkJwt, (req, res) => {
 		}
 		else{
 			console.log("Could not find user: " + userId);
+			res.status(500).send({
+				msg: "500 Server Error: Could not find user in database."
+			});
 		}
 	});
 });
@@ -150,13 +152,15 @@ app.put("/api/identicon", checkJwt, (req, res) => {
 		}
 		else{
 			console.log("Could not find user: " + userId);
+			res.status(500).send({
+				msg: "500 Server Error: Could not find user in database."
+			});
 		}
 	});
 });
 
 app.delete("/api/identicon", checkJwt, (req, res) => {
 	const userId = req.user.sub;
-	console.log("DELETE request from user " + userId + " for " + req.body.iconValue);
 	connection.query(`SELECT icons_list FROM users WHERE user_id = '${userId}'`, (err, result, fields) => {
 		if (err) throw err;
 		if(result.length > 0){
@@ -185,8 +189,8 @@ app.delete("/api/identicon", checkJwt, (req, res) => {
 			}
 		}
 		else{
-			res.status(400).send({
-				msg: "400 Bad Request: User does not exist."
+			res.status(500).send({
+				msg: "500 Server Error: Could not find user in database."
 			});
 		}
 	});

@@ -135,9 +135,8 @@ const replaceUserData = async () => {
 						console.log("Successfully finished syncing offline changes!");
 					}
 					else{
-						console.log("PUT was not response.ok");
-						//const responseData = await response.json();
-						//console.log(responseData.msg);
+						const responseData = await response.json();
+						console.log(responseData.msg);
 					}
 					
 					updateIdenticonList(jsonObject);
